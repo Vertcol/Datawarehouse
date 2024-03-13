@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "pr4-3"
+name = "datawarehouse"
 version = "0.1.0"
 description = ""
 authors = ["Kees van Voorthuizen <me@keesvv.nl>"]
