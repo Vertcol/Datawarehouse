@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "pr4-3"
+version = "0.1.0"
+description = ""
+authors = ["Kees van Voorthuizen <me@keesvv.nl>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+pandas = "^2.2.1"
+
+[tool.poetry.group.dev.dependencies]
+jupyter = "^1.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
