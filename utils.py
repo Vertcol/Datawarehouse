@@ -2,6 +2,22 @@ import pandas as pd
 import json
 import sqlite3
 import pyodbc
+import os
+from settings import Settings
+
+"""
+Establishes SQlite connection to file
+"""
+def getSqlite(settings: Settings, filename):
+    path = os.path.join(settings.data_dir, filename)
+    return sqlite3.connect(path)
+
+"""
+Read data from CSV file
+"""
+def getCSV(settings: Settings, filename):
+    path = os.path.join(settings.data_dir, filename)
+    return pd.read_csv(path)
 
 """
 Method to merge two tables flexibly
@@ -9,7 +25,7 @@ Method to merge two tables flexibly
 - Uses all available columns
 - Errors when a row of the two dataframes doesn't match (df1 has 'A' and df2 has 'B' in row)
 """
-def merge_tables(df1, df2, index_col):
+def mergeTables(df1, df2, index_col):
     # Ensure 'CODE' is set as the index for both DataFrames
     if index_col not in df1.columns or index_col not in df2.columns:
         raise KeyError(f"{index_col} must be a column in both DataFrames.")

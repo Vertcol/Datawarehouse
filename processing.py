@@ -3,12 +3,16 @@ import numpy as np
 import json
 import sqlite3
 import pyodbc
-from utils import merge_tables, createTable, insertTable, filterColumns, excludeColumns, sizeCheck
+import os
+from settings import Settings
+from utils import * 
+#mergeTables, getSqlite, createTable, insertTable, filterColumns, excludeColumns, sizeCheck
 
-def run():
+def run(settings: Settings):
     select_tables = "SELECT name FROM sqlite_master WHERE type='table'"
 
-    sales_con = sqlite3.connect("go_sales.sqlite")
+    sales_con = getSqlite(settings, "go_sales.sqlite") 
+
     sales_tables = pd.read_sql_query(select_tables, sales_con)
 
     sales_country       = pd.read_sql_query("SELECT * FROM country;", sales_con)
@@ -27,7 +31,7 @@ def run():
     sqlite_sequence     = pd.read_sql_query("SELECT * FROM sqlite_sequence;", sales_con)
     print("Imported sales tables")
 
-    staff_con = sqlite3.connect("go_staff.sqlite")
+    staff_con = getSqlite(settings, "go_staff.sqlite")  # sqlite3.connect()
     staff_tables = pd.read_sql_query(select_tables, staff_con)
 
     course            = pd.read_sql_query("SELECT * FROM course;", staff_con)
@@ -38,7 +42,7 @@ def run():
     training          = pd.read_sql_query("SELECT * FROM training;", staff_con)
     print("Imported staff tables")
 
-    crm_con = sqlite3.connect("go_crm.sqlite")
+    crm_con = getSqlite(settings, "go_crm.sqlite") 
     crm_tables = pd.read_sql_query(select_tables, crm_con)
                             
     age_group             = pd.read_sql_query("SELECT * FROM age_group;", crm_con)
@@ -53,16 +57,13 @@ def run():
     sales_territory       = pd.read_sql_query("SELECT * FROM sales_territory;", crm_con)
     print("Imported crm tables")
 
-    inventory_level = pd.read_csv("GO_SALES_INVENTORY_LEVELSData.csv")
+    inventory_level = getCSV(settings, "GO_SALES_INVENTORY_LEVELSData.csv") 
     print("Imported inventory table")
 
-    sales_forecast = pd.read_csv("GO_SALES_PRODUCT_FORECASTData.csv")
+    sales_forecast = getCSV(settings, "GO_SALES_PRODUCT_FORECASTData.csv") 
     print("Imported sales product forecast table")
 
-    servername = 'DESKTOP-9F8A8PF\\MSSQLSERVER01'
-    database = 'Datawarehouse'
-
-    sql_server_conn = pyodbc.connect(f"DRIVER={{SQL Server}};SERVER={servername};DATABASE={database};Trusted_Connection=yes")
+    sql_server_conn = pyodbc.connect(f"DRIVER={{SQL Server}};SERVER={settings.server};DATABASE={settings.database};Trusted_Connection=yes")
     cursor = sql_server_conn.cursor()
 
     """
@@ -78,10 +79,10 @@ def run():
     valid_columns = set(rename_mapping.values())
 
     # Merge duplicate tables into single table
-    retailer_site = merge_tables(sales_retailer_site, crm_retailer_site, 'RETAILER_SITE_CODE')
+    retailer_site = mergeTables(sales_retailer_site, crm_retailer_site, 'RETAILER_SITE_CODE')
     # Column name mismatch
     sales_country = sales_country.rename(columns={'COUNTRY': 'COUNTRY_EN'})
-    country = merge_tables(sales_country, crm_country, 'COUNTRY_CODE')
+    country = mergeTables(sales_country, crm_country, 'COUNTRY_CODE')
 
     # Tables to create at end         
     etl_tables = []
