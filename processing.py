@@ -5,7 +5,7 @@ import sqlite3
 import pyodbc
 import os
 from settings import Settings
-from utils import * 
+from tableutils import * 
 #mergeTables, getSqlite, createTable, insertTable, filterColumns, excludeColumns, sizeCheck
 
 def run(settings: Settings):

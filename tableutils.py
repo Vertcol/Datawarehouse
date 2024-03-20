@@ -80,10 +80,8 @@ def excludeColumns(dataframe, column_names):
 
 def sizeCheck(dataframe, expected_column_count):
     actual_column_count = len(dataframe.columns)
-    if actual_column_count == expected_column_count:
-        print(f'Table has {expected_column_count} columns')
-    else:
-        raise Exception(f'Table has {actual_column_count} columns, expected {expected_column_count}')
+    if actual_column_count != expected_column_count:
+        raise ValueError(f'Table has {actual_column_count} columns, expected {expected_column_count}')
 
 """
 Get the last slice of a string
