@@ -342,15 +342,18 @@ def run(settings: Settings):
 
     # Sales Target ETL
 
+    # Drop
+    sales_target_etl = SALES_TARGETData.drop('RETAILER_NAME', axis=1)
+
     # Rename
-    sales_target_etl = SALES_TARGETData.rename(columns=rename_mapping)
+    sales_target_etl = sales_target_etl.rename(columns=rename_mapping)
     sales_target_etl = sales_target_etl.rename(columns={'Id':'TARGET_id'})
 
     # Exclude
     sales_target_etl = filterColumns(sales_target_etl)
 
     # Assert
-    sizeCheck(sales_target_etl,5)
+    sizeCheck(sales_target_etl,7)
     sales_target_etl  
 
     # Create
