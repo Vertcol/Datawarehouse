@@ -130,9 +130,21 @@ def columnType(column_name):
     raise Exception(err)
 
 """
+Method to drop multiple tables from a list
+"""
+def dropTables(tables, cursor):
+    for table in tables:
+        table_name = table['table_name']
+        cursor.execute(f"DROP TABLE {table_name}")
+    try:
+        cursor.commit()
+    except pyodbc.Error as e:
+        print(e)
+
+"""
 Method to insert dataframe data into SQL server
 """
-def createTable(tablename, dataframe, PK, foreign_SK_list, cursor):
+def createTable(tablename, dataframe, PK, SK_list, cursor):
     SK = ''
     columns = ''
     foreign_SQL_SK_columns = ''
@@ -149,7 +161,7 @@ def createTable(tablename, dataframe, PK, foreign_SK_list, cursor):
     for column in dataframe.columns:
         if column != PK: # PK is already added
             columns += f', {column} {columnType(column)}'
-            if column in foreign_SK_list:
+            if column in SK_list:
                 foreign_SQL_SK_columns += f', SK_{column} INT'
 
     surogate_columns = f"{SK} INT IDENTITY(1,1) NOT NULL PRIMARY KEY, Timestamp DATETIME NOT NULL DEFAULT(GETDATE())"
@@ -230,11 +242,7 @@ def insertTable(tablename, dataframe, PK, SK_list, cursor):
 """
 Method to update the surrogate keys of a table in SQL server
 """
-def updateSurrogates(table, SK_list, cursor):
-    foreign_table = table
-
-    column = 'MANAGER_id'
-    foreign_column = 'SALES_STAFF_id'
+def updateSurrogate(table, foreign_table, column, foreign_column, cursor):
 
     command = \
     f"WITH CTE_MostRecent AS ( \
@@ -253,3 +261,23 @@ def updateSurrogates(table, SK_list, cursor):
         WHERE t.SK_{column} = 0;"
 
     cursor.execute(command)
+    cursor.commit()
+
+"""
+Method to update list of surrogate keys
+"""
+def updateSurrogates(surrogates, cursor):
+    for surrogate in surrogates:
+        table = surrogate['table']
+        column = surrogate['column']
+
+        try:
+            foreign_table = surrogate['foreign_table']
+        except KeyError: # foreign_table not defined, assume same as table
+            foreign_table = table
+        try:
+            foreign_column = surrogate['foreign_column']
+        except KeyError: # foreign_table not defined, assume same as column
+            foreign_column = column
+
+        updateSurrogate(table, foreign_table, column, foreign_column, cursor)

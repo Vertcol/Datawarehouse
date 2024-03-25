@@ -84,8 +84,9 @@ def run(settings: Settings):
     sales_country = sales_country.rename(columns={'COUNTRY': 'COUNTRY_EN'})
     country = mergeTables(sales_country, crm_country, 'COUNTRY_CODE')
 
-    # Tables to create at end         
+    # Tables and surrogates to create at end         
     etl_tables = []
+    surrogates = []
 
     # Product ETL
 
@@ -140,6 +141,13 @@ def run(settings: Settings):
         'PK': 'SALES_STAFF_id',
         'SK_columns': ['MANAGER_id']
     })
+
+    # Surrogates
+    surrogates.append({
+        'table': 'Sales_Staff',
+        'column': 'MANAGER_id',
+        'foreign_column': 'SALES_STAFF_id'
+    }) 
 
     # Satisfaction type ETL
 
@@ -431,13 +439,7 @@ def run(settings: Settings):
     # Create tables
 
     # Drop old
-    for table in etl_tables:
-        table_name = table['table_name']
-        cursor.execute(f"DROP TABLE {table_name}")
-    try:
-        cursor.commit()
-    except pyodbc.Error as e:
-        print(e)
+    dropTables(etl_tables, cursor)
 
     # Create
     for table in etl_tables:
@@ -445,6 +447,9 @@ def run(settings: Settings):
         createTable(table['table_name'], table['dataframe'], table['PK'], table['SK_columns'], cursor)
         insertTable(table['table_name'], table['dataframe'], table['PK'], table['SK_columns'], cursor)
         print(f"Inserted {table['table_name']}")
+    
+    # Update surrogates
+    updateSurrogates(surrogates, cursor)
 
     cursor.close()
 

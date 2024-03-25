@@ -76,7 +76,7 @@ def sizeCheckTest():
 
 def surrogateTest(cursor):
 
-    updateSurrogates('Sales_Staff', [], cursor)
+    updateSurrogate('Sales_Staff', 'Sales_Staff', 'MANAGER_id', 'SALES_STAFF_id', cursor)
 
     print("✅ Surogate Update Test Sucess")
 
