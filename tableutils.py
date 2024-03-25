@@ -226,3 +226,30 @@ def insertTable(tablename, dataframe, PK, SK_list, cursor):
         else:
             print(command)
             print(e)
+
+"""
+Method to update the surrogate keys of a table in SQL server
+"""
+def updateSurrogates(table, SK_list, cursor):
+    foreign_table = table
+
+    column = 'MANAGER_id'
+    foreign_column = 'SALES_STAFF_id'
+
+    command = \
+    f"WITH CTE_MostRecent AS ( \
+            SELECT \
+                SK_{foreign_column}, \
+                {foreign_column}, \
+                {column}, \
+                ROW_NUMBER() OVER(PARTITION BY SK_{foreign_column} ORDER BY Timestamp DESC) AS rn \
+            FROM \
+                {foreign_table}  \
+        ) \
+        UPDATE t \
+        SET t.SK_{column} = f.SK_{foreign_column} \
+        FROM {table} t \
+        INNER JOIN CTE_MostRecent f ON t.{column} = f.{foreign_column} AND f.rn = 1 \
+        WHERE t.SK_{column} = 0;"
+
+    cursor.execute(command)

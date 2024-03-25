@@ -74,12 +74,30 @@ def sizeCheckTest():
 
     raise Exception("Size Check Test Failed")
 
+def surrogateTest(cursor):
 
-def runTests():
+    updateSurrogates('Sales_Staff', [], cursor)
+
+    print("✅ Surogate Update Test Sucess")
+
+
+def runTests(settings):
+
+    sql_server_conn = pyodbc.connect(f"DRIVER={{SQL Server}};SERVER={settings.server};DATABASE={settings.database};Trusted_Connection=yes")
+    cursor = sql_server_conn.cursor()
+
     mergeTest()
     mergeConflictTest()
     sizeCheckTest()
+    surrogateTest(cursor)
 
 if __name__ == '__main__':
-    runTests()
+    settings = Settings(
+        server="DESKTOP-9F8A8PF\\MSSQLSERVER01",
+        database="Datawarehouse",
+        data_dir="data/",
+        log_dir="logs/"
+    )
+
+    runTests(settings)
     
