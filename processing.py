@@ -206,8 +206,16 @@ def run(settings: Settings):
         'table_name': 'Sales_Forecast',
         'dataframe': sales_forecast_etl,
         'PK': 'PRODUCT_id',
-        'SK_columns': []
+        # Broken
+        'SK_columns': [] #['PRODUCT_id']
     })
+
+    # Surrogates (Broken)
+    # surrogates.append({
+    #     'table': 'Sales_Forecast',
+    #     'foreign_table': 'Product',
+    #     'column': 'PRODUCT_id',
+    # }) 
 
     # Inventory Level ETL
 
@@ -457,8 +465,15 @@ def run(settings: Settings):
         'table_name': 'Sales_Target',
         'dataframe': sales_target_etl,
         'PK': 'TARGET_id',
-        'SK_columns': ['SALES_STAFF_id']
+        'SK_columns': ['SALES_STAFF_id', 'PRODUCT_id']
     })
+
+    # Surrogates
+    surrogates.append({
+        'table': 'Sales_Target',
+        'foreign_table': 'Product',
+        'column': 'PRODUCT_id',
+    }) 
 
     # Surrogates
     surrogates.append({
