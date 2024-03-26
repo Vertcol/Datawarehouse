@@ -249,7 +249,6 @@ def updateSurrogate(table, foreign_table, column, foreign_column, cursor):
             SELECT \
                 SK_{foreign_column}, \
                 {foreign_column}, \
-                {column}, \
                 ROW_NUMBER() OVER(PARTITION BY SK_{foreign_column} ORDER BY Timestamp DESC) AS rn \
             FROM \
                 {foreign_table}  \
