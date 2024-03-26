@@ -84,8 +84,9 @@ def run(settings: Settings):
     sales_country = sales_country.rename(columns={'COUNTRY': 'COUNTRY_EN'})
     country = mergeTables(sales_country, crm_country, 'COUNTRY_CODE')
 
-    # Tables to create at end         
+    # Tables and surrogates to create at end         
     etl_tables = []
+    surrogates = []
 
     # Product ETL
 
@@ -104,7 +105,12 @@ def run(settings: Settings):
     product_etl
 
     # Create
-    etl_tables.append(('Product', product_etl, 'PRODUCT_id'))
+    etl_tables.append({
+        'table_name': 'Product',
+        'dataframe': product_etl,
+        'PK': 'PRODUCT_id',
+        'SK_columns': []
+    })
 
 
 
@@ -129,7 +135,19 @@ def run(settings: Settings):
     sales_staff_etl
 
     # Create
-    etl_tables.append(('Sales_Staff', sales_staff_etl, 'SALES_STAFF_id'))
+    etl_tables.append({
+        'table_name': 'Sales_Staff',
+        'dataframe': sales_staff_etl,
+        'PK': 'SALES_STAFF_id',
+        'SK_columns': ['MANAGER_id']
+    })
+
+    # Surrogates
+    surrogates.append({
+        'table': 'Sales_Staff',
+        'column': 'MANAGER_id',
+        'foreign_column': 'SALES_STAFF_id'
+    }) 
 
     # Satisfaction type ETL
 
@@ -144,7 +162,12 @@ def run(settings: Settings):
     satisfaction_type_etl
 
     # Create
-    etl_tables.append(('Satisfaction_Type', satisfaction_type_etl, 'SATISFACTION_TYPE_id'))
+    etl_tables.append({
+        'table_name': 'Satisfaction_Type',
+        'dataframe': satisfaction_type_etl,
+        'PK': 'SATISFACTION_TYPE_id',
+        'SK_columns': []
+    })
 
     # Course ETL
 
@@ -159,7 +182,12 @@ def run(settings: Settings):
     course_etl
 
     # Create
-    etl_tables.append(('Course', course_etl, 'COURSE_id'))
+    etl_tables.append({
+        'table_name': 'Course',
+        'dataframe': course_etl,
+        'PK': 'COURSE_id',
+        'SK_columns': []
+    })
 
     # Sales Forecast ETL
 
@@ -174,7 +202,12 @@ def run(settings: Settings):
     sales_forecast_etl
 
     # Create
-    etl_tables.append(('Sales_Forecast', sales_forecast_etl, 'PRODUCT_id'))
+    etl_tables.append({
+        'table_name': 'Sales_Forecast',
+        'dataframe': sales_forecast_etl,
+        'PK': 'PRODUCT_id',
+        'SK_columns': []
+    })
 
     # Inventory Level ETL
 
@@ -211,7 +244,12 @@ def run(settings: Settings):
     retailer_contact_etl
 
     # Create
-    etl_tables.append(('Retailer_Contact', retailer_contact_etl, 'RETAILER_CONTACT_id'))
+    etl_tables.append({
+        'table_name': 'Retailer_Contact',
+        'dataframe': retailer_contact_etl,
+        'PK': 'RETAILER_CONTACT_id',
+        'SK_columns': []
+    })
 
 
 
@@ -240,7 +278,12 @@ def run(settings: Settings):
     retailer_etl
 
     # Create
-    etl_tables.append(('Retailer', retailer_etl, 'RETAILER_id'))
+    etl_tables.append({
+        'table_name': 'Retailer',
+        'dataframe': retailer_etl,
+        'PK': 'RETAILER_id',
+        'SK_columns': []
+    })
 
     # Order ETL
 
@@ -260,7 +303,12 @@ def run(settings: Settings):
     order_etl
 
     # Create
-    etl_tables.append(('Orders', order_etl, 'ORDER_TABLE_id'))
+    etl_tables.append({
+        'table_name': 'Orders',
+        'dataframe': order_etl,
+        'PK': 'ORDER_TABLE_id',
+        'SK_columns': []
+    })
 
     # Return reason ETL
 
@@ -275,7 +323,12 @@ def run(settings: Settings):
     return_reason_etl
 
     # Create
-    etl_tables.append(('Return_Reason', return_reason_etl, 'RETURN_REASON_id'))
+    etl_tables.append({
+        'table_name': 'Return_Reason',
+        'dataframe': return_reason_etl,
+        'PK': 'RETURN_REASON_id',
+        'SK_columns': []
+    })
 
     # Training ETL
 
@@ -291,8 +344,12 @@ def run(settings: Settings):
     training_etl
 
     # Create
-    etl_tables.append(('Training', training_etl, None))
-    training_etl
+    etl_tables.append({
+        'table_name': 'Training',
+        'dataframe': training_etl,
+        'PK': None,
+        'SK_columns': []
+    })
 
     # Satisfaction ETL
 
@@ -307,8 +364,12 @@ def run(settings: Settings):
     satisfaction_etl
 
     # Create
-    etl_tables.append(('Satisfaction', satisfaction_etl, None))
-    satisfaction_etl
+    etl_tables.append({
+        'table_name': 'Satisfaction',
+        'dataframe': satisfaction_etl,
+        'PK': None,
+        'SK_columns': []
+    })
 
     # Returned Item ETL
 
@@ -323,7 +384,12 @@ def run(settings: Settings):
     returned_item_etl
 
     # Create
-    etl_tables.append(('Returns', returned_item_etl, 'RETURNS_id'))
+    etl_tables.append({
+        'table_name': 'Returns',
+        'dataframe': returned_item_etl,
+        'PK': 'RETURNS_id',
+        'SK_columns': []
+    })
 
     # Order Details ETL
 
@@ -338,7 +404,12 @@ def run(settings: Settings):
     order_detail_etl
 
     # Create
-    etl_tables.append(('Order_Details', order_detail_etl, 'ORDER_DETAIL_id'))
+    etl_tables.append({
+        'table_name': 'Order_Details',
+        'dataframe': order_detail_etl,
+        'PK': 'ORDER_DETAIL_id',
+        'SK_columns': []
+    })
 
     # Sales Target ETL
 
@@ -357,26 +428,28 @@ def run(settings: Settings):
     sales_target_etl  
 
     # Create
-    etl_tables.append(('Sales_Target', sales_target_etl, 'TARGET_id'))
+    etl_tables.append({
+        'table_name': 'Sales_Target',
+        'dataframe': sales_target_etl,
+        'PK': 'TARGET_id',
+        'SK_columns': []
+    })
 
 
     # Create tables
 
     # Drop old
-    for table in etl_tables:
-        table_name = table[0]
-        cursor.execute(f"DROP TABLE {table_name}")
-    try:
-        cursor.commit()
-    except pyodbc.Error as e:
-        print(e)
+    dropTables(etl_tables, cursor)
 
     # Create
     for table in etl_tables:
-        print(f"Creating {table[0]}")
-        createTable(table[0], table[1], table[2], cursor)
-        insertTable(table[0], table[1], table[2], cursor)
-        print(f"Inserted {table[0]}")
+        print(f"Creating {table['table_name']}")
+        createTable(table['table_name'], table['dataframe'], table['PK'], table['SK_columns'], cursor)
+        insertTable(table['table_name'], table['dataframe'], table['PK'], table['SK_columns'], cursor)
+        print(f"Inserted {table['table_name']}")
+    
+    # Update surrogates
+    updateSurrogates(surrogates, cursor)
 
     cursor.close()
 

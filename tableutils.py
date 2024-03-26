@@ -3,6 +3,7 @@ import json
 import sqlite3
 import pyodbc
 import os
+import numpy as np
 from settings import Settings
 
 """
@@ -129,10 +130,24 @@ def columnType(column_name):
     raise Exception(err)
 
 """
+Method to drop multiple tables from a list
+"""
+def dropTables(tables, cursor):
+    for table in tables:
+        table_name = table['table_name']
+        cursor.execute(f"DROP TABLE {table_name}")
+    try:
+        cursor.commit()
+    except pyodbc.Error as e:
+        print(e)
+
+"""
 Method to insert dataframe data into SQL server
 """
-def createTable(tablename, dataframe, PK, cursor):
+def createTable(tablename, dataframe, PK, SK_list, cursor):
     SK = ''
+    columns = ''
+    foreign_SQL_SK_columns = ''
     if PK == None:
         PK = dataframe.columns[0]
         SK = f'SK_{tablename}'
@@ -146,11 +161,13 @@ def createTable(tablename, dataframe, PK, cursor):
     for column in dataframe.columns:
         if column != PK: # PK is already added
             columns += f', {column} {columnType(column)}'
+            if column in SK_list:
+                foreign_SQL_SK_columns += f', SK_{column} INT'
 
     surogate_columns = f"{SK} INT IDENTITY(1,1) NOT NULL PRIMARY KEY, Timestamp DATETIME NOT NULL DEFAULT(GETDATE())"
 
     # Create the command
-    command = f"CREATE TABLE {tablename} ({surogate_columns}, {columns})"
+    command = f"CREATE TABLE {tablename} ({surogate_columns}, {columns+foreign_SQL_SK_columns})"
 
     try:
         cursor.execute(command)
@@ -164,36 +181,52 @@ def createTable(tablename, dataframe, PK, cursor):
 """
 Method to insert dataframe data into SQL server
 """
-def insertTable(tablename, dataframe, PK, cursor):
+def insertTable(tablename, dataframe, PK, SK_list, cursor):
     # Add Primary Key as first column
-    columns = ''
+    SQL_columns = ''
+    SQL_SK_columns = ''
     if PK == None:
         PK = dataframe.columns[0]
         
-    columns = PK
+    SQL_columns = PK
         
     # Add all the other columns
     for column in dataframe.columns:
-        if column != PK: # PK is already added
-            columns += f', {column}'
+        # Ignore Primary Key
+        if column != PK: 
+            # Surrogate keys produce two columns
+            if column in SK_list:
+                SQL_columns    += f', {column}'
+                SQL_SK_columns += f', SK_{column}'
+            else:
+                SQL_columns    += f', {column}'
+
     
     # Execute inserts
     for i, row in dataframe.iterrows():
         values = ''
+        SK_values = ''
         values += str(row[PK])
 
+        # Add values
         for column in dataframe.columns:
             if column != PK: # PK is already added
                 try:
                     val = str(row[column]).replace("'","''")
-                    if val != 'None':
+                    if val != 'None' and val != np.nan:
                         values += f", '{val}'"
+                        if column in SK_list:
+                            # 0 refers to an unlinked row as placeholder
+                            SK_values += ', 0'
                     else:
                         values += f", NULL"
+                        if column in SK_list:
+                            # NULL refers a non-existant row
+                            SK_values += ', NULL'
                 except AttributeError:
                     values += f", NULL"
 
-        command = f"INSERT INTO {tablename} ({columns}) VALUES ({values});\n"
+        command = f"INSERT INTO {tablename} ({SQL_columns+SQL_SK_columns}) VALUES ({values+SK_values});\n"
         
         cursor.execute(command)
     
@@ -205,3 +238,46 @@ def insertTable(tablename, dataframe, PK, cursor):
         else:
             print(command)
             print(e)
+
+"""
+Method to update the surrogate keys of a table in SQL server
+"""
+def updateSurrogate(table, foreign_table, column, foreign_column, cursor):
+
+    command = \
+    f"WITH CTE_MostRecent AS ( \
+            SELECT \
+                SK_{foreign_column}, \
+                {foreign_column}, \
+                {column}, \
+                ROW_NUMBER() OVER(PARTITION BY SK_{foreign_column} ORDER BY Timestamp DESC) AS rn \
+            FROM \
+                {foreign_table}  \
+        ) \
+        UPDATE t \
+        SET t.SK_{column} = f.SK_{foreign_column} \
+        FROM {table} t \
+        INNER JOIN CTE_MostRecent f ON t.{column} = f.{foreign_column} AND f.rn = 1 \
+        WHERE t.SK_{column} = 0;"
+
+    cursor.execute(command)
+    cursor.commit()
+
+"""
+Method to update list of surrogate keys
+"""
+def updateSurrogates(surrogates, cursor):
+    for surrogate in surrogates:
+        table = surrogate['table']
+        column = surrogate['column']
+
+        try:
+            foreign_table = surrogate['foreign_table']
+        except KeyError: # foreign_table not defined, assume same as table
+            foreign_table = table
+        try:
+            foreign_column = surrogate['foreign_column']
+        except KeyError: # foreign_table not defined, assume same as column
+            foreign_column = column
+
+        updateSurrogate(table, foreign_table, column, foreign_column, cursor)
