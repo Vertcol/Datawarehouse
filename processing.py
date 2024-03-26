@@ -248,9 +248,15 @@ def run(settings: Settings):
         'table_name': 'Retailer_Contact',
         'dataframe': retailer_contact_etl,
         'PK': 'RETAILER_CONTACT_id',
-        'SK_columns': []
+        'SK_columns': ['RETAILER_id']
     })
 
+    # Surrogates
+    surrogates.append({
+        'table': 'Retailer_Contact',
+        'foreign_table': 'Retailer',
+        'column': 'RETAILER_id'
+    })
 
 
     # Retailer ETL
@@ -307,8 +313,20 @@ def run(settings: Settings):
         'table_name': 'Orders',
         'dataframe': order_etl,
         'PK': 'ORDER_TABLE_id',
-        'SK_columns': []
+        'SK_columns': ['SALES_STAFF_id', 'RETAILER_CONTACT_id']
     })
+
+    # Surrogates
+    surrogates.append({
+        'table': 'Orders',
+        'foreign_table': 'Sales_Staff',
+        'column': 'SALES_STAFF_id',
+    }) 
+    surrogates.append({
+        'table': 'Orders',
+        'foreign_table': 'Retailer_Contact',
+        'column': 'RETAILER_CONTACT_id',
+    }) 
 
     # Return reason ETL
 
@@ -408,8 +426,15 @@ def run(settings: Settings):
         'table_name': 'Order_Details',
         'dataframe': order_detail_etl,
         'PK': 'ORDER_DETAIL_id',
-        'SK_columns': []
+        'SK_columns': ['PRODUCT_id']
     })
+
+    # Surrogates
+    surrogates.append({
+        'table': 'Order_Details',
+        'foreign_table': 'Product',
+        'column': 'PRODUCT_id',
+    }) 
 
     # Sales Target ETL
 
@@ -432,8 +457,15 @@ def run(settings: Settings):
         'table_name': 'Sales_Target',
         'dataframe': sales_target_etl,
         'PK': 'TARGET_id',
-        'SK_columns': []
+        'SK_columns': ['SALES_STAFF_id']
     })
+
+    # Surrogates
+    surrogates.append({
+        'table': 'Sales_Target',
+        'foreign_table': 'Sales_Staff',
+        'column': 'SALES_STAFF_id',
+    }) 
 
 
     # Create tables
